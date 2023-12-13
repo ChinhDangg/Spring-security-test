@@ -32,4 +32,12 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
+
+//    http
+//            .formLogin()
+//            .loginPage("/login") // The login page URL
+//        .loginProcessingUrl("/authenticate") // The URL to submit the login form
+//        .defaultSuccessUrl("/dashboard") // Redirect on successful authentication
+//        .failureUrl("/login?error=true") // Redirect on authentication failure
+//        .permitAll(); // Allow anyone to access the login page
 }
