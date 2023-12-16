@@ -20,6 +20,7 @@ public class AuthenticationController {
     public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
         AuthenticationResponse response = authenticationService.register(request);
         if (response == null)
+
             return ResponseEntity.ok(new AuthenticationResponse("Email already exist"));
         else
             return ResponseEntity.ok(authenticationService.register(request));
