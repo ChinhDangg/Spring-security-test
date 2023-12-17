@@ -6,7 +6,9 @@ import com.auth.user.User;
 import com.auth.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,16 +42,21 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        String userEmail = request.getEmail();
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userEmail, request.getPassword())
-        );
-        //if authenticate above fails, the following code will not trigger
-        //check the ApplicationConfig for authentication details
-        var user = userRepository.findByEmail(userEmail).orElseThrow();
-        var jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .build();
+        try {
+            String userEmail = request.getEmail();
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(userEmail, request.getPassword())
+            );
+            //if authenticate above fails, the following code will not trigger
+            //check the ApplicationConfig for authentication details
+            var user = userRepository.findByEmail(userEmail).orElseThrow();
+            var jwtToken = jwtService.generateToken(user);
+            return AuthenticationResponse.builder()
+                    .token(jwtToken)
+                    .build();
+        } catch (BadCredentialsException e) {
+            System.out.println("Wrong password or username");
+        }
+        return null;
     }
 }
