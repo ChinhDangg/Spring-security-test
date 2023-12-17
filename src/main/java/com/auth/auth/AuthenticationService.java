@@ -12,6 +12,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -35,7 +37,7 @@ public class AuthenticationService {
             userRepository.save(user);
             String jwtToken = jwtService.generateToken(user);
             return AuthenticationResponse.builder()
-                    .token(jwtToken)
+                    .response(Map.of("token",jwtToken))
                     .build();
         }
         return null;
@@ -52,7 +54,7 @@ public class AuthenticationService {
             var user = userRepository.findByEmail(userEmail).orElseThrow();
             var jwtToken = jwtService.generateToken(user);
             return AuthenticationResponse.builder()
-                    .token(jwtToken)
+                    .response(Map.of("token",jwtToken))
                     .build();
         } catch (BadCredentialsException e) {
             System.out.println("Wrong password or username");

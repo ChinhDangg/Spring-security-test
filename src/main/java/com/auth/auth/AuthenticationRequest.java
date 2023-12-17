@@ -1,15 +1,15 @@
 package com.auth.auth;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class AuthenticationRequest {
     private String email;
     private String password;
+
+    public boolean haveAllFields() {
+        return (email != null && password != null);
+    }
 }
