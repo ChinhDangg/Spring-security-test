@@ -11,5 +11,5 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 public class AuthenticationResponse {
-    private Map<String, String> response;
+    private String token;
 }

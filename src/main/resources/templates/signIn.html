@@ -8,10 +8,22 @@
     <title>Document</title>
 </head>
 <body>
-<p>
-    something to say hello
-</p>
+    <form>
+        <div id="login-error" style="display: none;">Wrong email or password</div>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" autocapitalize="off" autocomplete="off"
+            placeholder="Enter your email" required>
+        </div>
+        <div>
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" autocapitalize="off" autocomplete="off"
+            placeholder="Enter your password" required>
+        </div>
+        <button type="button" id="sign-in-submit" disabled>Sign In</button>
+    </form>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <script type="text/javascript" th:src="@{/js/signIn.js}"></script>
 </body>
 </html>

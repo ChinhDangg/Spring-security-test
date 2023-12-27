@@ -37,7 +37,7 @@ public class AuthenticationService {
             userRepository.save(user);
             String jwtToken = jwtService.generateToken(user);
             return AuthenticationResponse.builder()
-                    .response(Map.of("token",jwtToken))
+                    .token(jwtToken)
                     .build();
         }
         return null;
@@ -54,7 +54,7 @@ public class AuthenticationService {
             var user = userRepository.findByEmail(userEmail).orElseThrow();
             var jwtToken = jwtService.generateToken(user);
             return AuthenticationResponse.builder()
-                    .response(Map.of("token",jwtToken))
+                    .token(jwtToken)
                     .build();
         } catch (BadCredentialsException e) {
             System.out.println("Wrong password or username");
