@@ -1,16 +1,16 @@
 package com.auth.MainPage;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@Controller
 @RequestMapping("/home")
 public class PageController {
 
-    @GetMapping
-    public ResponseEntity<String> sayHello() {
-        return ResponseEntity.ok("Hello from security endpoint");
+    @GetMapping()
+    public String sayHello() {
+        System.out.println("was here");
+        return "index";
     }
 }
