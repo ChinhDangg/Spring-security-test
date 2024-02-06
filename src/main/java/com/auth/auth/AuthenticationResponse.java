@@ -1,5 +1,6 @@
 package com.auth.auth;
 
+import jakarta.servlet.http.Cookie;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,5 +12,5 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 public class AuthenticationResponse {
-    private String token;
+    private Cookie cookie;
 }

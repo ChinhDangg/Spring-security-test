@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.io.IOException;
 import java.util.Random;
 
 @Controller
@@ -33,46 +34,33 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        if (!request.haveAllFields())
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("BAD REQUEST");
-        AuthenticationResponse response = authenticationService.register(request);
-        if (response == null)
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("UNAUTHORIZED ACCESS");
-        return ResponseEntity.ok(response);
+    public void register(@RequestBody RegisterRequest registerRequest, HttpServletResponse response) {
+        if (!registerRequest.haveAllFields())
+            response.setStatus(400);
+        AuthenticationResponse authResponse = authenticationService.register(registerRequest);
+        if (authResponse == null)
+            response.setStatus(409);
+        else {
+            response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://ajax.googleapis.com;");
+            response.setHeader("Location", "/home");
+            response.addCookie(authResponse.getCookie());
+            response.setStatus(200);
+        }
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<?> authenticate(@RequestBody AuthenticationRequest request, HttpSession session, HttpServletResponse servletResponse, HttpServletRequest httpRequest) {
-        if (!request.haveAllFields())
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("BAD REQUEST");
-        AuthenticationResponse response = authenticationService.authenticate(request);
-        if (response == null)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("UNAUTHORIZED ACCESS");
-        //get the previous accessing url before authentication
-        SavedRequest savedRequest = (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST");
-        if (savedRequest != null) {
-            String originalUrl = savedRequest.getRedirectUrl();
-            servletResponse.addHeader("redirect-url", originalUrl);
-            System.out.println(originalUrl);
+    public void authenticate(@RequestBody AuthenticationRequest authRequest, HttpServletResponse response) throws IOException {
+        if (!authRequest.haveAllFields())
+            response.setStatus(400); // Bad Request
+        AuthenticationResponse authResponse = authenticationService.authenticate(authRequest);
+        if (authResponse == null)
+            response.setStatus(401); // Unauthorized
+        else {
+            // allow from source from self and google ajax api for jquery only
+            response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://ajax.googleapis.com;");
+            response.addCookie(authResponse.getCookie());
+            response.setHeader("Location", "/home");
+            response.setStatus(200);
         }
-        //allow from source from self and google ajax api for jquery only
-        servletResponse.addHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://ajax.googleapis.com;");
-        return ResponseEntity.ok(response);
-    }
-
-    private Cookie makeRefreshTokenCookie(String userEmail) {
-        Random r = new Random();
-        String cId = "u" + (r.nextInt() * 1000);
-        Cookie cookie = new Cookie(cId, userEmail);
-        cookie.setMaxAge(3600);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        //cookie.setSecure(true);
-        return cookie;
     }
 }

@@ -1,6 +1,7 @@
 package com.auth.config;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,19 +25,24 @@ public class JwtService {
     private String SECRET_KEY;
 
     public String extractUsername(String jwtToken) {
-        return extractClaim(jwtToken).getSubject();
+        try {
+            return extractAllClaims(jwtToken).getSubject();
+        } catch(ExpiredJwtException e) {
+            return e.getClaims().getSubject();
+        } catch (Exception ignored) {}
+        return null;
     }
 
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        return generateToken(Jwts.claims(), userDetails);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateToken(Map<String, Object> claims, UserDetails userDetails) {
         return Jwts.builder()
-                .setClaims(extraClaims)
+                .setClaims(claims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 300))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 900))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -45,25 +52,33 @@ public class JwtService {
         return (userName.equals(userDetails.getUsername())) && !isTokenExpired(jwtToken);
     }
 
+    public boolean isTokenValidAndExpiredWithin(String jwtToken, UserDetails userDetails) {
+        Claims claims = null;
+        try {
+            claims = extractAllClaims(jwtToken);
+        } catch (ExpiredJwtException e) {
+            claims = e.getClaims();
+        } catch (Exception ignored) { return false; }
+        String userName = claims.getSubject();
+        Instant expiredTime = claims.getExpiration().toInstant();
+        System.out.println("token expired time: " + expiredTime);
+        Instant cookiesMaxTime = new Date((Long)claims.get("cookieMaxTime")).toInstant();
+        System.out.println("cookies max time: " + cookiesMaxTime);
+        boolean expiredWithin = expiredTime.isBefore(cookiesMaxTime);
+        return (userName.equals(userDetails.getUsername())) && expiredWithin;
+    }
+
     public boolean isTokenExpired(String jwtToken) {
         return extractExpiration(jwtToken).before(new Date());
     }
 
     public Date extractExpiration(String jwtToken) {
-        return extractClaim(jwtToken).getExpiration();
-    }
-
-//    private <T> T extractClaim(String jwtToken, Function<Claims, T> claimsResolver) {
-//        final Claims claims = extractAllClaims(jwtToken);
-//        return claimsResolver.apply(claims);
-//    }
-
-    public Claims extractClaim(String jwtToken) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSignInKey())
-                .build()
-                .parseClaimsJws(jwtToken)
-                .getBody();
+        try {
+            return extractAllClaims(jwtToken).getExpiration();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims().getExpiration();
+        } catch (Exception ignored) {}
+        return null;
     }
 
     public Claims extractAllClaims(String jwtToken) {

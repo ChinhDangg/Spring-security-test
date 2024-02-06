@@ -26,16 +26,16 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .requestCache(request -> request
-                    .requestCache(new HttpSessionRequestCache())
-            )
+//            .requestCache(request -> request
+//                    .requestCache(new HttpSessionRequestCache())
+//            )
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/authentication/**").permitAll()
                     .requestMatchers("/js/**").permitAll()
                     .requestMatchers("/favicon.ico").permitAll()
                     .anyRequest().authenticated()
             )
-            .exceptionHandling(ex -> ex //if jwt not found - redirect
+            .exceptionHandling(ex -> ex //if jwt not found - redirect to login page
                     .authenticationEntryPoint(jwtAuthenticationEntryPoint)
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -43,12 +43,4 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-
-//    http
-//            .formLogin()
-//            .loginPage("/login") // The login page URL
-//        .loginProcessingUrl("/authenticate") // The URL to submit the login form
-//        .defaultSuccessUrl("/dashboard") // Redirect on successful authentication
-//        .failureUrl("/login?error=true") // Redirect on authentication failure
-//        .permitAll(); // Allow anyone to access the login page
 }
